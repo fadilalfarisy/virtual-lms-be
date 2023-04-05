@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
             code: 403,
             status: 'FORBIDDEN',
             errors: {
-                token: 'token is null'
+                token: 'access token is null'
             }
         });
     }
@@ -20,7 +20,7 @@ const auth = (req, res, next) => {
                     code: 403,
                     status: 'FORBIDDEN',
                     errors: {
-                        token: 'invalid token'
+                        token: 'invalid access token'
                     }
                 });
             }

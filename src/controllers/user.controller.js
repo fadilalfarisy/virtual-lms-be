@@ -136,6 +136,7 @@ const login = async (req, res, next) => {
 const logout = async (req, res, next) => {
     try {
         //clear cookie refresh token
+        console.log(req.cookies.token)
         res.clearCookie('token', { path: '/' })
         res.status(200).json({
             code: 200,
@@ -193,7 +194,7 @@ const deleteUser = async (req, res, next) => {
 const checkRefreshToken = async (req, res, next) => {
     try {
         const { token } = req.cookies
-
+        console.log(req.cookies)
         //when not sent cookie refresh token
         if (!token) {
             return res.status(403).json({
@@ -210,11 +211,12 @@ const checkRefreshToken = async (req, res, next) => {
                     code: 403,
                     status: 'FORBIDDEN',
                     errors: {
-                        token: 'invalid token'
+                        token: 'invalid refresh token'
                     }
                 });
             }
             const accessToken = createAccessToken({ id: decoded.id })
+            console.log(`new access token ${accessToken}`)
             res.status(200).json({
                 code: 200,
                 status: 'OK',
