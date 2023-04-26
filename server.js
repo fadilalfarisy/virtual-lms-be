@@ -9,7 +9,7 @@ import router from './src/routes/index.js'
 import config from './src/config/config.js'
 
 //config
-const { PORT, MONGO_URI, FRONT_END_ORIGIN } = config
+const { PORT, MONGO_URI, FRONT_END_ORIGIN, CSS_URL } = config
 
 try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true })
@@ -57,7 +57,6 @@ const options = {
 }
 
 const swaggerSpec = swaggerJSDoc(options)
-
 const app = express()
 
 //middleware
@@ -70,7 +69,7 @@ app.use(bodyParser.urlencoded({ extended: false })) //allow request with format 
 app.use(bodyParser.json()) //allow request with format json
 
 //api
-app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec))
+app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, { customCssUrl: CSS_URL }))
 app.use('/', router)
 app.get('/', (req, res) => {
     res.status(200).json({
