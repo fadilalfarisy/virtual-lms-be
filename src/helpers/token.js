@@ -18,13 +18,19 @@ const createRefreshToken = ({ id }) => {
 }
 
 //verify access JWT token
-const verifyAccessToken = (token, callback) => {
-    return jwt.verify(token, ACCESS_TOKEN, callback)
+const verifyAccessToken = (token) => {
+    return jwt.verify(token, ACCESS_TOKEN, (error, decoded) => {
+        if (error) return { error, decoded: null }
+        return { error: null, decoded }
+    })
 }
 
 //verify refresh JWT token
-const verifyRefreshToken = (token, callback) => {
-    return jwt.verify(token, REFRESH_TOKEN, callback)
+const verifyRefreshToken = (token) => {
+    return jwt.verify(token, REFRESH_TOKEN, (error, decoded) => {
+        if (error) return { error, decoded: null }
+        return { error: null, decoded }
+    })
 }
 
 export {

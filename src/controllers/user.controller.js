@@ -1,48 +1,39 @@
 import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
-import { createAccessToken, createRefreshToken, verifyRefreshToken } from '../libs/token.js'
+import { createAccessToken, createRefreshToken, verifyRefreshToken } from '../helpers/token.js'
+import { validateRegister, validateLogin } from '../helpers/validator.js';
 
 const register = async (req, res, next) => {
-    const { fullName, email, password } = req.body;
     try {
         //check required field
-        if (!fullName || !email || !password) {
-            return res.status(400).json({
-                code: 400,
-                status: 'BAD_REQUEST',
-                errors: {
-                    fullName: 'must not be null',
-                    email: 'must not be null',
-                    password: 'must not be null'
-                }
-            });
+        const { error, value } = validateRegister(req.body);
+        if (error) {
+            const err = new Error('Invalid request')
+            err.code = 400
+            err.errors = error.details
+            throw err
         }
 
-        //check duplicated username
+        const { fullName, email, password } = value;
+
+        //check duplicate email
         const user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({
-                code: 400,
-                status: 'BAD_REQUEST',
-                errors: {
-                    email: 'email already used'
-                }
-            });
+            const err = new Error('Invalid request')
+            err.code = 400
+            err.errors = [{ email: 'duplicate value' }]
+            throw err
         }
 
         const newUser = await User.create({
             fullName,
             email,
-            password: password.toString()
+            password
         });
 
         //create access token and refresh token
-        const accessToken = createAccessToken({
-            id: newUser.id,
-        });
-        const refreshToken = createRefreshToken({
-            id: newUser.id,
-        })
+        const accessToken = createAccessToken({ id: newUser.id });
+        const refreshToken = createRefreshToken({ id: newUser.id })
 
         //send refresh token as a cookie
         res.cookie("token", refreshToken, {
@@ -52,10 +43,7 @@ const register = async (req, res, next) => {
         res.status(201).json({
             code: 201,
             status: 'CREATED',
-            data: {
-                email,
-                accessToken
-            }
+            data: [{ email, accessToken }]
         });
 
     } catch (error) {
@@ -64,55 +52,37 @@ const register = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-    const { email, password } = req.body;
     try {
         //check required field
-        if (!email || !password) {
-            return res.status(400).json({
-                code: 400,
-                status: 'BAD_REQUEST',
-                errors: {
-                    email: 'must not be null',
-                    password: 'must not be null'
-                }
-            });
+        const { error, value } = validateLogin(req.body)
+        if (error) {
+            console.log(error);
+            return res.status(400).json(error.details);
         }
+
+        const { email, password } = value;
 
         //check username user is exist
         const user = await User.findOne({ email })
-
-        //when username user is not found
         if (!user) {
-            return res.status(404).json({
-                code: 404,
-                status: 'NOT_FOUND',
-                errors: {
-                    email: 'email not found'
-                }
-            });
+            const err = new Error('Invalid request')
+            err.code = 404
+            err.errors = [{ email: 'email is not registered yet' }]
+            throw err
         }
 
         //compare the password
-        const hashPassword = await bcrypt.compare(password.toString(), user.password)
-
-        //when password is not match
+        const hashPassword = await bcrypt.compare(password, user.password)
         if (!hashPassword) {
-            return res.status(400).json({
-                code: 400,
-                status: 'BAD_REQUEST',
-                errors: {
-                    password: 'invalid password'
-                }
-            });
+            const err = new Error('Invalid request')
+            err.code = 400
+            err.errors = [{ password: 'invalid password' }]
+            throw err
         }
 
         //create access token and refresh token
-        const accessToken = createAccessToken({
-            id: user._id,
-        });
-        const refreshToken = createRefreshToken({
-            id: user._id,
-        });
+        const accessToken = createAccessToken({ id: user._id });
+        const refreshToken = createRefreshToken({ id: user._id });
 
         //send refresh token as a cookie 
         res.cookie("token", refreshToken, {
@@ -122,10 +92,10 @@ const login = async (req, res, next) => {
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: {
+            data: [{
                 email: user.email,
                 accessToken: accessToken
-            }
+            }]
         });
 
     } catch (error) {
@@ -135,15 +105,11 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
-        //clear cookie refresh token
-        console.log(req.cookies.token)
         res.clearCookie('token', { path: '/' })
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: {
-                message: 'success logout'
-            }
+            data: [{ message: 'success logout' }]
         })
     } catch (error) {
         next(error)
@@ -152,13 +118,11 @@ const logout = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
     try {
-        const users = await User.find({})
+        const users = await User.find({}).select('fullName')
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: {
-                users
-            }
+            data: users
         })
     } catch (error) {
         next(error)
@@ -168,23 +132,18 @@ const getAllUsers = async (req, res, next) => {
 const deleteUser = async (req, res, next) => {
     const { id } = req.params
     try {
-        const deletedAdmin = await User.deleteOne({ _id: id })
-        //when no one admin is deleted
-        if (deletedAdmin.deletedCount === 0) {
-            return res.status(404).json({
-                code: 404,
-                status: 'NOT_FOUND',
-                errors: {
-                    id: 'user not found'
-                }
-            });
+        const deletedUser = await User.deleteOne({ _id: id })
+        if (deletedUser.deletedCount == 0) {
+            const err = new Error('Invalid request')
+            err.code = 404
+            err.errors = [{ id: 'user not found' }]
+            throw err
         }
+
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: {
-                message: 'success deleted user'
-            }
+            data: [{ message: 'success deleted user' }]
         })
     } catch (error) {
         next(error)
@@ -194,37 +153,28 @@ const deleteUser = async (req, res, next) => {
 const checkRefreshToken = async (req, res, next) => {
     try {
         const { token } = req.cookies
-        console.log(req.cookies)
-        //when not sent cookie refresh token
         if (!token) {
-            return res.status(403).json({
-                code: 403,
-                status: 'FORBIDDEN',
-                errors: {
-                    cookie: 'cookie is null'
-                }
-            });
+            const err = new Error('Invalid request')
+            err.code = 403
+            err.errors = [{ cookie: 'cookie is null' }]
+            throw err
         }
-        verifyRefreshToken(token, (error, decoded) => {
-            if (error) {
-                return res.status(403).json({
-                    code: 403,
-                    status: 'FORBIDDEN',
-                    errors: {
-                        token: 'invalid refresh token'
-                    }
-                });
-            }
-            const accessToken = createAccessToken({ id: decoded.id })
-            console.log(`new access token ${accessToken}`)
-            res.status(200).json({
-                code: 200,
-                status: 'OK',
-                data: {
-                    accessToken: accessToken
-                }
-            });
-        })
+
+        const { error, decoded } = verifyRefreshToken(token)
+        if (error != null) {
+            const err = new Error('Invalid request')
+            err.code = 403
+            err.errors = [{ token: 'invalid refresh token' }]
+            throw err
+        }
+
+        const accessToken = createAccessToken({ id: decoded.id })
+        res.status(200).json({
+            code: 200,
+            status: 'OK',
+            data: [{ accessToken: accessToken }]
+        });
+
     } catch (error) {
         next(error)
     }
