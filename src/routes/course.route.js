@@ -15,12 +15,17 @@ const course = express.Router()
  *       type: object
  *       required:
  *         - subject
+ *         - semester
  *       properties:
  *         subject:
  *           type: string
  *           description: The name of course
+ *         semester:
+ *           type: number
+ *           description: The semester of the course
  *       example:
  *         subject: Proyek Minor Sistem Informasi
+ *         semester: 3
  */
 
 

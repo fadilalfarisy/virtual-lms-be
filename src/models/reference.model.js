@@ -9,11 +9,9 @@ const referenceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  semester: {
-    type: Number,
+  channel: {
+    type: String,
     required: true,
-    min: 1,
-    max: 8
   },
   courseId: {
     type: mongoose.Types.ObjectId,

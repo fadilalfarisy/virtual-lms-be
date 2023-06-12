@@ -17,7 +17,6 @@ const reference = express.Router()
  *       required:
  *         - title
  *         - link
- *         - semester
  *         - courseId
  *         - createdBy
  *       properties:
@@ -27,9 +26,6 @@ const reference = express.Router()
  *         link:
  *           type: string
  *           description: The link video of the reference
- *         semester:
- *           type: number
- *           description: The semester of the course
  *         courseId:
  *           type: string
  *           description: The id of the course
@@ -39,7 +35,6 @@ const reference = express.Router()
  *       example:
  *         title: Business Process Model and Notation (BPMN) 2.0 Tutorial
  *         link: https://www.youtube.com/watch?v=BwkNceoybvA
- *         semester: 3
  *         courseId: 6447dd07081f62b8db71b045
  *         createdBy: 6440d4150a73a915567e44fb
  */

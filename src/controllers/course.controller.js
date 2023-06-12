@@ -11,8 +11,8 @@ const createCourse = async (req, res, next) => {
             throw err
         }
 
-        const { subject } = value;
-        const newCourse = await Course.create({ subject });
+        const { subject, semester } = value;
+        const newCourse = await Course.create({ subject, semester });
         res.status(201).json({
             code: 201,
             status: 'CREATED',
@@ -25,8 +25,14 @@ const createCourse = async (req, res, next) => {
 
 
 const getAllCourse = async (req, res, next) => {
+    let { semester } = req.query
+    let search = {}
+
+    if (semester) {
+        search = { semester: Number(semester), ...search }
+    }
     try {
-        const courses = await Course.find({})
+        const courses = await Course.find(search)
         res.status(200).json({
             code: 200,
             status: 'OK',
@@ -82,8 +88,8 @@ const updateCourse = async (req, res, next) => {
         }
 
         const { id } = valueId
-        const { subject } = value
-        await Course.updateOne({ _id: id }, { subject })
+        const { subject, semester } = value
+        await Course.updateOne({ _id: id }, { subject, semester })
         res.status(200).json({
             code: 200,
             status: 'OK',

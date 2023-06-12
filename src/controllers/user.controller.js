@@ -37,7 +37,7 @@ const register = async (req, res, next) => {
 
         //send refresh token as a cookie
         res.cookie("token", refreshToken, {
-            expires: new Date(Date.now() + 1000 * 60 * 60 * 24), //1d
+            expires: new Date(Date.now() + 1000 * 60 * 60), //1d
         });
 
         res.status(201).json({

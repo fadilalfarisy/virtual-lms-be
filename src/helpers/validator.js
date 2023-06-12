@@ -41,18 +41,21 @@ const courseSchema = Joi.object({
   subject: Joi.string()
     .trim()
     .required(),
+  semester: Joi.number()
+    .min(1)
+    .max(8)
+    .required(),
 });
 
 const referenceSchema = Joi.object({
   title: Joi.string()
     .trim()
     .required(),
-  link: Joi.string()
+  channel: Joi.string()
     .trim()
     .required(),
-  semester: Joi.number()
-    .min(1)
-    .max(8)
+  link: Joi.string()
+    .trim()
     .required(),
   courseId: Joi.string()
     .trim()
@@ -65,16 +68,29 @@ const idSchema = Joi.object({
     .custom(idValidation)
 });
 
+const idCourseSchema = Joi.object({
+  courseId: Joi.string()
+    .trim()
+    .custom(idValidation),
+  search: Joi.string()
+    .trim(),
+  skip: Joi.number(),
+  limit: Joi.number(),
+  page: Joi.number()
+});
+
 const validateRegister = validator(registerSchema)
 const validateLogin = validator(loginSchema)
 const validateCourse = validator(courseSchema)
 const validateReference = validator(referenceSchema)
 const validateId = validator(idSchema)
+const validateIdCourse = validator(idCourseSchema)
 
 export {
   validateRegister,
   validateLogin,
   validateCourse,
   validateReference,
-  validateId
+  validateId,
+  validateIdCourse
 }

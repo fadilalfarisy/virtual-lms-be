@@ -1,5 +1,7 @@
+import mongoose from 'mongoose'
 import Reference from '../models/reference.model.js'
-import { validateReference, validateId } from '../helpers/validator.js';
+import Course from '../models/course.model.js';
+import { validateReference, validateId, validateIdCourse } from '../helpers/validator.js';
 
 const createReference = async (req, res, next) => {
     try {
@@ -11,11 +13,11 @@ const createReference = async (req, res, next) => {
             throw err
         }
 
-        const { title, link, semester, courseId } = value;
+        const { title, link, channel, courseId } = value;
         const newReference = await Reference.create({
             title,
             link,
-            semester,
+            channel,
             courseId,
             createdBy: req.token.id
         });
@@ -32,12 +34,128 @@ const createReference = async (req, res, next) => {
 
 
 const getAllReference = async (req, res, next) => {
+    let { courseId, search, skip, limit, page } = req.query
+    let query = {}
     try {
-        const references = await Reference.find({}).populate("createdBy", "fullName").populate("courseId", "subject")
+        if (courseId) {
+            const { error, value } = validateIdCourse(req.query)
+            if (error) {
+                const err = new Error('Invalid id')
+                err.code = 400
+                err.errors = error.details
+                throw err
+            }
+            const { courseId } = value
+            query = {
+                "course._id": new mongoose.Types.ObjectId(courseId)
+            }
+        }
+
+        let querySkip = 0
+        let queryLimit = 10
+        let queryPage = 1
+        if (skip) {
+            querySkip = Number(skip)
+        }
+        if (limit) {
+            queryLimit = Number(limit)
+        }
+        if (page) {
+            queryPage = Number(page)
+        }
+
+        //filter by search keyword
+        if (search) {
+            query = {
+                ...query,
+                $or: [{
+                    'title': {
+                        $regex: search,
+                        $options: "i"
+                    },
+                }, {
+                    'channel': {
+                        $regex: search,
+                        $options: "i"
+                    },
+                }]
+            }
+        }
+
+        const course = await Course.findById(courseId)
+        const reference = await Reference.where({ 'courseId': courseId }).countDocuments()
+        const references = await Reference.aggregate([
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'createdBy',
+                    foreignField: '_id',
+                    as: 'author'
+                },
+            }, {
+                $lookup: {
+                    from: 'courses',
+                    localField: 'courseId',
+                    foreignField: '_id',
+                    as: 'course'
+                },
+            }, {
+                $unwind: '$course'
+            }, {
+                $unwind: '$author'
+            }, {
+                $match: query
+            },
+            // {
+            //     $facet: {
+            //         pagination: [
+            //             {
+            //                 $count: "total"
+            //             }, {
+            //                 $addFields: { page: queryPage }
+            //             }, {
+            //                 $addFields: { skip: querySkip }
+            //             }, {
+            //                 $addFields: { limit: queryLimit }
+            //             }
+            //         ],
+            //         reference: [{
+            //             $skip: (queryPage - 1) * querySkip
+            //         }, {
+            //             $limit: queryLimit
+            //         }],
+            //     },
+            // }, {
+            //     $unwind: '$pagination'
+            // }
+            //{
+            //     $project: {
+            //         total: '$pagination.total',
+            //         page: '$pagination.page',
+            //         skip: '$pagination.skip',
+            //         limit: '$pagination.limit',
+            //         references: '$reference'
+            //     }
+            // }
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    link: 1,
+                    channel: 1,
+                    author: "$author.fullName",
+                    course: "$course.subject"
+                }
+            }
+        ])
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: references
+            info: {
+                course,
+                total: reference
+            },
+            references: references
         })
     } catch (error) {
         next(error)
@@ -89,11 +207,11 @@ const updateReference = async (req, res, next) => {
         }
 
         const { id } = valueId
-        const { title, link, semester, courseId } = value
+        const { title, link, channel, courseId } = value
         await Reference.updateOne({ _id: id }, {
             title,
+            channel,
             link,
-            semester,
             courseId
         })
 
