@@ -9,7 +9,7 @@ import router from './src/routes/index.js'
 import config from './src/config/config.js'
 
 //config
-const { PORT, MONGO_URI, FRONT_END_ORIGIN, CSS_URL } = config
+const { PORT, MONGO_URI, FRONT_END_ORIGIN, FRONT_END_ORIGIN_LOCAL, CSS_URL } = config
 
 try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true })
@@ -62,7 +62,7 @@ const app = express()
 //middleware
 app.use(cors({
     credentials: true,
-    origin: FRONT_END_ORIGIN
+    origin: [FRONT_END_ORIGIN, FRONT_END_ORIGIN_LOCAL]
 }))
 app.use(cookieParser()); //allow to access cookie
 app.use(bodyParser.urlencoded({ extended: false })) //allow request with format x-www-form-urlencoded
