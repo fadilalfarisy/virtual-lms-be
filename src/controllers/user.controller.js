@@ -3,6 +3,10 @@ import bcrypt from 'bcrypt'
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from '../helpers/token.js'
 import { validateRegister, validateLogin } from '../helpers/validator.js';
 
+import config from '../config/config.js';
+
+const { DEVELOPMENT } = config
+
 const register = async (req, res, next) => {
     try {
         //check required field
@@ -38,9 +42,10 @@ const register = async (req, res, next) => {
         //send refresh token as a cookie
         res.cookie("token", refreshToken, {
             expires: new Date(Date.now() + 1000 * 60 * 60), //1d
-            httpOnly: true,
-            sameSite: "none",
-            secure: "false",
+            // httpOnly: true,
+            // sameSite: "none",
+            // secure: false,
+            domain: DEVELOPMENT ? 'localhost' : '.vercel.app'
         });
 
         res.status(201).json({
@@ -90,9 +95,10 @@ const login = async (req, res, next) => {
         //send refresh token as a cookie 
         res.cookie("token", refreshToken, {
             expires: new Date(Date.now() + 1000 * 60 * 60 * 24), //1d
-            httpOnly: true,
-            sameSite: "none",
-            secure: "false",
+            domain: DEVELOPMENT ? 'localhost' : '.vercel.app'
+            // httpOnly: true,
+            // sameSite: "none",
+            // secure: false,
         });
 
         res.status(200).json({
