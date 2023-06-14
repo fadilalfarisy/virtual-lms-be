@@ -4,7 +4,7 @@ const authentication = (req, res, next) => {
   let accessToken = req.headers.authorization
   if (!accessToken) {
     const err = new Error('Invalid request')
-    err.code = 403
+    err.code = 498
     err.errors = [{ token: 'access token is null' }]
     throw err
   }
@@ -14,7 +14,7 @@ const authentication = (req, res, next) => {
     const { error, decoded } = verifyAccessToken(accessToken)
     if (error != null) {
       const err = new Error('Invalid request')
-      err.code = 403
+      err.code = 498
       err.errors = [{ token: 'invalid access token' }]
       throw err
     }

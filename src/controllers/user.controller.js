@@ -155,7 +155,7 @@ const checkRefreshToken = async (req, res, next) => {
         const { token } = req.cookies
         if (!token) {
             const err = new Error('Invalid request')
-            err.code = 403
+            err.code = 422
             err.errors = [{ cookie: 'cookie is null' }]
             throw err
         }
@@ -163,7 +163,7 @@ const checkRefreshToken = async (req, res, next) => {
         const { error, decoded } = verifyRefreshToken(token)
         if (error != null) {
             const err = new Error('Invalid request')
-            err.code = 403
+            err.code = 422
             err.errors = [{ token: 'invalid refresh token' }]
             throw err
         }
@@ -172,7 +172,7 @@ const checkRefreshToken = async (req, res, next) => {
         res.status(200).json({
             code: 200,
             status: 'OK',
-            data: [{ accessToken: accessToken }]
+            data: { accessToken: accessToken }
         });
 
     } catch (error) {
