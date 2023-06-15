@@ -34,6 +34,7 @@ const reference = express.Router()
  *           description: The id of the user who created
  *       example:
  *         title: Business Process Model and Notation (BPMN) 2.0 Tutorial
+ *         channel: BPMN Notation
  *         link: https://www.youtube.com/watch?v=BwkNceoybvA
  *         courseId: 6447dd07081f62b8db71b045
  *         createdBy: 6440d4150a73a915567e44fb
@@ -46,6 +47,17 @@ const reference = express.Router()
  *  get:
  *    summary: List all the references
  *    tags: [References]
+ *    parameters:
+ *      - in: query
+ *        name: courseId
+ *        schema:
+ *          type: ObjectId
+ *        description: id course
+ *      - in: query
+ *        name: search
+ *        schema:
+ *          type: string
+ *        description: search by title and channel
  *    responses:
  *      201:
  *        description: The list of references.

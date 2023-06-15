@@ -35,6 +35,12 @@ const course = express.Router()
  *  get:
  *    summary: List all the course
  *    tags: [Courses]
+ *    parameters:
+ *      - in: query
+ *        name: semester
+ *        schema:
+ *          type: string
+ *        description: semester course
  *    responses:
  *      201:
  *        description: The list of course.
